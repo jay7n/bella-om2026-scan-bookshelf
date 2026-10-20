@@ -30,6 +30,8 @@ function localOrigins() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // 给 Docker / Sealos 镜像用：产出自带 server.js 的最小运行时
+  output: "standalone",
   // 关键：不加这行，手机访问时 JS 全部 403
   allowedDevOrigins: localOrigins(),
 };

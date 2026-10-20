@@ -1,0 +1,128 @@
+# 部署到 Sealos
+
+两种方式，按你在 Sealos 上建的是哪种来选。
+
+## 需要配置的环境变量
+
+无论哪种方式，这几个都要在平台的「环境变量」里配，**不要提交进仓库**：
+
+| 变量 | 必填 | 说明 |
+|---|---|---|
+| `DEEPSEEK_API_KEY` | ✅ | 识别书名 + 写简介 |
+| `ARK_API_KEY` | 可选 | Seedream 画封面，不填就只用程序化封面 |
+| `ARK_API_BASE` | 可选 | 默认 `https://ark.cn-beijing.volces.com/api/v3` |
+| `ARK_IMAGE_MODEL` | 可选 | 默认 `doubao-seedream-4-0-20260415` |
+| `DEEPSEEK_BASE_URL` | 可选 | 默认 `https://api.deepseek.com` |
+| `DEEPSEEK_THINKING` | 可选 | 默认 `disabled`，别改 |
+
+---
+
+## 方式 A：Devbox（和你 wksp2 那套一样）
+
+代码放在 `/home/devbox/project`，用 Node 直接跑。
+
+```bash
+# 1. 进 Devbox 终端，克隆仓库
+cd /home/devbox/project
+git clone git@github.com:jay7n/bella-om2026-scan-bookshelf.git .
+
+# 2. 配环境变量（这个文件不进仓库）
+cat > .env.production <<'EOF'
+DEEPSEEK_API_KEY=sk-你的key
+ARK_API_KEY=你的火山key
+EOF
+
+# 3. 装依赖 + 构建
+corepack enable
+pnpm install --frozen-lockfile
+pnpm build
+
+# 4. 启动
+pnpm start:production
+```
+
+**或者直接用仓库里的 `entrypoint.sh`**（会自己判断要不要装依赖 / 构建）：
+
+```bash
+chmod +x entrypoint.sh
+./entrypoint.sh
+```
+
+想用 PM2 常驻：
+
+```bash
+npm i -g pm2
+pm2 start ecosystem.config.js
+pm2 save
+pm2 logs saoshu
+```
+
+`ecosystem.config.js` 会自动读 `.env.production`。
+
+### Devbox 注意
+
+- **端口填 3000**，并且要对外暴露
+- Node 版本要 **≥ 20.9**（Next 16 的要求），Devbox 里 `nvm use 22`
+- 如果 `pnpm` 不存在：`npm i -g pnpm`
+
+---
+
+## 方式 B：App Launchpad（容器镜像）
+
+仓库里已经有 `Dockerfile`（多阶段构建，用 standalone 输出，镜像约 200MB）。
+
+```bash
+# 在本地构建并推送（Sealos 有内置镜像仓库）
+docker build -t saoshu:latest .
+docker tag saoshu:latest <你的镜像仓库地址>/saoshu:latest
+docker push <你的镜像仓库地址>/saoshu:latest
+```
+
+然后在 Sealos 的 App Launchpad：
+
+| 配置项 | 值 |
+|---|---|
+| 镜像 | 刚推上去的那个 |
+| 容器端口 | **3000** |
+| 环境变量 | 上面那张表 |
+| CPU / 内存 | 0.2 核 / 512MB 足够 |
+| 副本数 | 1 |
+
+部署完会给一个 `https://xxx.sealos.run` 的公网域名。
+
+### 镜像注意
+
+- 容器里 `NODE_ENV=production`、`PORT=3000`、`HOSTNAME=0.0.0.0` 已经在 Dockerfile 里设好
+- `.cache/covers` 在容器里是**临时目录**，重启就清空。封面缓存会重建，只是第一次慢一点。要持久化就挂个存储卷到 `/app/.cache`
+- `.env.local` 不会被打进镜像（`.dockerignore` 里排除了）
+
+---
+
+## 部署后自查
+
+```bash
+# 1. 页面能开
+curl -I https://你的域名/
+
+# 2. key 读到了（ok:true 才算成功）
+curl https://你的域名/api/scan
+
+# 3. 豆瓣代抓通了
+curl -o /dev/null -w "%{http_code}\n" \
+  "https://你的域名/api/cover?u=https%3A%2F%2Fimg2.doubanio.com%2Fview%2Fsubject%2Fs%2Fpublic%2Fs1067911.jpg"
+```
+
+三条都通，就可以在手机上打开用了。
+
+---
+
+## 线上和本地的区别
+
+| | 本地开发 | 线上部署 |
+|---|---|---|
+| 地址 | `http://<主机名>.local:3000` | `https://xxx.sealos.run` |
+| JS 白名单 | 需要 `allowedDevOrigins` | 不需要（只在 dev 生效） |
+| API key | `.env.local` | 平台环境变量 |
+| 封面缓存 | `.cache/covers` 持久 | 容器内临时，重启清空 |
+
+**线上是 HTTPS，反而比本地更适合演示**——浏览器对 HTTPS 站点更信任，也不会有局域网 IP 变来变去的问题。

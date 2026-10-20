@@ -95,6 +95,10 @@ pnpm dev
 
 没有 key 也能跑通整条链路：`node scripts/mock-deepseek.mjs` 起一个假模型，用 `DEEPSEEK_BASE_URL=http://127.0.0.1:4000` 指过去。
 
+### 部署
+
+见 [docs/DEPLOY-sealos.md](docs/DEPLOY-sealos.md)（Sealos Devbox 与容器镜像两种方式）。
+
 ### 手机上访问
 
 电脑和手机连同一个 WiFi，用 `http://<电脑主机名>.local:3000`（比 IP 稳，路由器换 IP 也不受影响）。

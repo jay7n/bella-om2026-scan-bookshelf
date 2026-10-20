@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.cache
+.pnpm-store
+docs
+*.log
+.env.local
+*.local
+README.md
+Dockerfile
+.dockerignore
