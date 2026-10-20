@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-cd /home/devbox/project
+# 跟着脚本自己的位置走，项目放在哪个目录都不会 cd 错
+cd "$(cd "$(dirname "$0")" && pwd)"
 
 # 优先用 nvm 切到 Node 22 再启动（Next 16 要求 Node ≥ 20.9，Node 18 会因为 SWC 加载失败起不来）；失败则兜底为当前环境的 Node。
 echo "Starting Next.js server..."
