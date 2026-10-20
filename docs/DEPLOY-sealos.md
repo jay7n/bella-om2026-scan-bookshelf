@@ -41,12 +41,15 @@ pnpm build
 pnpm start:production
 ```
 
-**或者直接用仓库里的 `entrypoint.sh`**（会自己判断要不要装依赖 / 构建）：
+**启动用仓库里的 `entrypoint.sh`**（和你 wksp2 那套同一个结构：nvm 切 Node 22，失败则兜底）：
 
 ```bash
 chmod +x entrypoint.sh
 ./entrypoint.sh
 ```
+
+它只负责**启动**，不负责装依赖和构建——首次部署要先把上面第 3 步（`pnpm install` + `pnpm build`）跑一遍。
+漏了的话脚本会打印一行 `WARN: 没找到 .next/BUILD_ID`，看到这句就回去构建。
 
 想用 PM2 常驻：
 
