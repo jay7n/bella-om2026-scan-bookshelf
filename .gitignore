@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+build/
+*.log
+.DS_Store
+.env
+.env.local
+.env*.local
+dev-server.log
+dev.log
+.cache/
+# 依赖缓存（pnpm 的本地 store，几十 MB，绝不能提交）
+.pnpm-store/
+# TS 增量编译缓存
+tsconfig.tsbuildinfo
