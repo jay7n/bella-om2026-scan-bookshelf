@@ -62,6 +62,35 @@ pm2 logs saoshu
 
 `ecosystem.config.js` 会自动读 `.env.production`。
 
+### 用 tmux 常驻（推荐）
+
+Devbox 的终端一关，前台进程就没了。用 tmux 可以让服务在断开 SSH 后继续跑。
+
+**装 tmux**（Devbox 一般是 Ubuntu）：
+
+```bash
+sudo apt update && sudo apt install -y tmux
+tmux -V
+```
+
+如果是 alpine 镜像：`sudo apk add tmux`。
+
+**用仓库里的脚本启动**：
+
+```bash
+pnpm build                 # 先确保构建过
+npm run tmux:start         # 后台起一个叫 saoshu 的会话
+npm run tmux:status        # 看状态（会顺手探活 3000 端口）
+npm run tmux:logs          # 跟踪日志，Ctrl+C 退出
+npm run tmux:attach        # 进会话，Ctrl+b 然后按 d 脱离
+npm run tmux:restart       # 改完代码 pnpm build 之后重启
+npm run tmux:stop          # 停
+```
+
+> ⚠️ **tmux 只能扛住 SSH 断开，扛不住容器重启。**
+> Devbox 实例重启（休眠、重新部署、平台维护）后 tmux 会话会消失。
+> 想让它开机自启，用平台设置里的启动命令指向 `entrypoint.sh`，而不是依赖 tmux。
+
 ### Devbox 注意
 
 - **端口填 3000**，并且要对外暴露

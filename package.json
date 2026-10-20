@@ -10,7 +10,13 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "start:production": "next start -H 0.0.0.0 -p 3000",
-    "build:prod": "next build"
+    "build:prod": "next build",
+    "tmux:start": "bash scripts/tmux-saoshu.sh start",
+    "tmux:stop": "bash scripts/tmux-saoshu.sh stop",
+    "tmux:restart": "bash scripts/tmux-saoshu.sh restart",
+    "tmux:attach": "bash scripts/tmux-saoshu.sh attach",
+    "tmux:status": "bash scripts/tmux-saoshu.sh status",
+    "tmux:logs": "bash scripts/tmux-saoshu.sh logs"
   },
   "dependencies": {
     "next": "16.4.2",
