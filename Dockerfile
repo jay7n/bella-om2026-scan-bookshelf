@@ -11,6 +11,8 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# 镜像走 standalone 输出
+ENV BUILD_STANDALONE=1
 RUN pnpm build
 
 # ---- 运行阶段 ----

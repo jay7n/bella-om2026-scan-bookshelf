@@ -30,8 +30,10 @@ function localOrigins() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // 给 Docker / Sealos 镜像用：产出自带 server.js 的最小运行时
-  output: "standalone",
+  // 只有构建 Docker 镜像时才开 standalone（BUILD_STANDALONE=1）。
+  // 开了 standalone 之后 `next start` 会拒绝启动，
+  // 而 Devbox 上跑的就是 next start —— 所以平时必须关着。
+  output: process.env.BUILD_STANDALONE === "1" ? "standalone" : undefined,
   // 关键：不加这行，手机访问时 JS 全部 403
   allowedDevOrigins: localOrigins(),
 };
