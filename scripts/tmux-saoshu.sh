@@ -69,9 +69,16 @@ cmd_start() {
   local inner_cmd
   inner_cmd="cd \"$ROOT\""
   inner_cmd+=" && { source \"\${NVM_DIR:-\$HOME/.nvm}/nvm.sh\" 2>/dev/null && nvm use 22; } || true"
-  inner_cmd+=" && exec $START_CMD 2>&1 | tee -a \"$LOG_FILE\""
+  # 崩了就重启，不用人守着。日志追加到同一个文件
+  inner_cmd+=" && while true; do"
+  inner_cmd+=" $START_CMD 2>&1 | tee -a \"$LOG_FILE\";"
+  inner_cmd+=" echo \"[tmux] 服务退出（$?），3 秒后重启…\" | tee -a \"$LOG_FILE\";"
+  inner_cmd+=" sleep 3;"
+  inner_cmd+=" done"
 
   tmux new-session -d -s "$SESSION" -c "$ROOT" "bash -lc $(printf '%q' "$inner_cmd")"
+  # 进程挂了也保留窗口，能 attach 进去看最后的输出
+  tmux set-option -t "$SESSION" remain-on-exit on 2>/dev/null || true
 
   sleep 2
   if session_running; then
