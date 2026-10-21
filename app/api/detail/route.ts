@@ -2,6 +2,7 @@ import { chatJSON, keyStatus, models } from "@/lib/deepseek";
 import { fetchDoubanSubject } from "@/lib/douban";
 import { detailPrompt } from "@/lib/prompt";
 import type { AiDetail, DetailResponse } from "@/lib/types";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 45;
@@ -19,6 +20,9 @@ const TTL = 12 * 60 * 60 * 1000;
  * 任一失败都能降级，不会整个详情页打不开。
  */
 export async function GET(req: Request) {
+  const limited = rateLimit(req, "detail", 40, 60000);
+  if (limited) return limited;
+
   const url = new URL(req.url);
   const id = (url.searchParams.get("id") || "").trim();
   const title = (url.searchParams.get("title") || "").trim().slice(0, 60);

@@ -1,4 +1,5 @@
 import { generateCoverImage, hasImageKey, imageModel, resolveCoverSize } from "@/lib/arkImage";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 90;
@@ -12,6 +13,9 @@ export const dynamic = "force-dynamic";
  * 存 URL 第二天就全挂了，所以当场下载，前端再缩到 448px 存本地。
  */
 export async function GET(req: Request) {
+  const limited = rateLimit(req, "coverGen", 3, 60000);
+  if (limited) return limited;
+
   if (!hasImageKey()) {
     return Response.json({ error: "缺少 ARK_API_KEY，请填到 .env.local" }, { status: 503 });
   }

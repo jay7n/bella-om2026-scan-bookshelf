@@ -1,6 +1,7 @@
 import { chatJSON, keyStatus, models } from "@/lib/deepseek";
 import { enrichPrompt, profilePrompt } from "@/lib/prompt";
 import type { EnrichResult } from "@/lib/types";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -15,6 +16,9 @@ const TTL = 12 * 60 * 60 * 1000;
  * 一本书一次调用：这样第一张卡片的文案最先回来，不用等全部算完。
  */
 export async function GET(req: Request) {
+  const limited = rateLimit(req, "enrich", 80, 60000);
+  if (limited) return limited;
+
   const status = keyStatus();
   if (!status.ok) return Response.json({ error: status.message }, { status: 503 });
 

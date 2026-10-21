@@ -1,5 +1,6 @@
 import { DOUBAN_REFERER, UA, isAllowedCoverUrl } from "@/lib/douban";
 import { readCoverFromDisk, writeCoverToDisk } from "@/lib/coverStore";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,9 @@ const MAX_ENTRIES = 300;
  * 所以必须由服务端代抓。
  */
 export async function GET(req: Request) {
+  const limited = rateLimit(req, "cover", 400, 60000);
+  if (limited) return limited;
+
   const url = new URL(req.url);
   const target = url.searchParams.get("u") || "";
 

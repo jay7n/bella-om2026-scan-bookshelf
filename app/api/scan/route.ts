@@ -1,5 +1,6 @@
 import { keyStatus, models, streamText } from "@/lib/deepseek";
 import { TITLE_PROMPT, normalizeTitle, parseTitleLine } from "@/lib/prompt";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -31,6 +32,9 @@ export async function GET() {
  * 不用等 20 本全部识别完。
  */
 export async function POST(req: Request) {
+  const limited = rateLimit(req, "scan", 5, 60000);
+  if (limited) return limited;
+
   const status = keyStatus();
   if (!status.ok) {
     return Response.json({ error: status.message }, { status: 503 });

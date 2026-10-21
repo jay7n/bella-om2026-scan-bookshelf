@@ -270,7 +270,7 @@ export default function ShelfScanner() {
     if (getCachedCover(title) || coverPending.current.has(title)) return;
     coverPending.current.add(title);
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
       if (!res.ok) return;
       const blob = await res.blob();
       const dataUrl = await shrinkToDataUrl(blob, 280);
@@ -314,7 +314,9 @@ export default function ShelfScanner() {
         if (ctx.tags?.length) params.set("tags", ctx.tags.slice(0, 3).join("|"));
         if (ctx.grade) params.set("grade", ctx.grade);
 
-        const res = await fetch(`/api/cover-gen?${params.toString()}`);
+        const res = await fetch(`/api/cover-gen?${params.toString()}`, {
+            signal: AbortSignal.timeout(90_000),
+          });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const blob = await res.blob();
@@ -340,7 +342,9 @@ export default function ShelfScanner() {
     async (key: string, title: string) => {
       await coverLimit(async () => {
         try {
-          const res = await fetch(`/api/search?title=${encodeURIComponent(title)}`);
+          const res = await fetch(`/api/search?title=${encodeURIComponent(title)}`, {
+            signal: AbortSignal.timeout(10_000),
+          });
           if (!res.ok) throw new Error(String(res.status));
           const data = await res.json();
           patch(key, {
@@ -386,7 +390,9 @@ export default function ShelfScanner() {
           if (profile?.interests.length) params.set("interests", profile.interests.join("|"));
           if (profile?.note) params.set("note", profile.note);
 
-          const res = await fetch(`/api/enrich?${params.toString()}`);
+          const res = await fetch(`/api/enrich?${params.toString()}`, {
+            signal: AbortSignal.timeout(25_000),
+          });
           if (!res.ok) throw new Error(String(res.status));
           const data = (await res.json()) as EnrichResult;
           const value: EnrichResult = {
@@ -483,6 +489,8 @@ export default function ShelfScanner() {
 
       const controller = new AbortController();
       abortRef.current = controller;
+      // 整体兜底：90 秒还没结束就中断，避免一直卡在"正在识别"
+      const scanTimeout = window.setTimeout(() => controller.abort(), 90_000);
 
       let res: Response;
       try {
@@ -561,6 +569,8 @@ export default function ShelfScanner() {
           failure = "读取识别结果时断开了，请重试";
         }
       }
+
+      window.clearTimeout(scanTimeout);
 
       if (!alive()) return;
 
