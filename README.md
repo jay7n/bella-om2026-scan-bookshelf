@@ -14,6 +14,12 @@
   <img src="images/shelf.jpg" width="215">
 </p>
 
+<p align="center">
+  <img src="images/qr-sticker.png" width="170" alt="扫码使用">
+  <br>
+  <sub>扫码就能用，不需要安装</sub>
+</p>
+
 **小学组 · 社区 AI 乐园**　　在线体验：`https://<部署域名>`
 
 ---
