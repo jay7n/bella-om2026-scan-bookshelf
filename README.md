@@ -20,7 +20,7 @@
   <sub>扫码就能用，不需要安装</sub>
 </p>
 
-**小学组 · 社区 AI 乐园**　　在线体验：`https://<部署域名>`
+**小学组 · 社区 AI 乐园**　　在线体验：https://elpultodjxuv.sealoshzh.site
 
 ---
 
