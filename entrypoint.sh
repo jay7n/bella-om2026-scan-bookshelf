@@ -1,26 +1,40 @@
 #!/bin/bash
+# Sealos 启动脚本
 set -e
 
 # 跟着脚本自己的位置走，项目放在哪个目录都不会 cd 错
 cd "$(cd "$(dirname "$0")" && pwd)"
 
-# 优先用 nvm 切到 Node 22 再启动（Next 16 要求 Node ≥ 20.9，Node 18 会因为 SWC 加载失败起不来）；失败则兜底为当前环境的 Node。
-echo "Starting Next.js server..."
+echo "[entrypoint] 目录: $(pwd)"
 
-# 没构建过就提前说清楚，否则只会看到 next start 的一句含糊报错
-if [ ! -f .next/BUILD_ID ]; then
-  echo "WARN: 没找到 .next/BUILD_ID，说明还没构建。先执行一次：pnpm install && pnpm build" >&2
+# 尽量用 Node 22；没有就用当前的，但必须 >= 20.9（Next 16 的要求）
+if [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
+  # shellcheck disable=SC1090
+  . "${NVM_DIR:-$HOME/.nvm}/nvm.sh" >/dev/null 2>&1 || true
+  nvm use 22 >/dev/null 2>&1 && echo "[entrypoint] 已切到 Node $(node -v)" || true
 fi
 
-(
-  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-  if [ ! -s "$NVM_DIR/nvm.sh" ]; then
-    exit 1
+if ! command -v node >/dev/null 2>&1; then
+  echo "[entrypoint] 找不到 node，请先安装 Node 20.9 以上" >&2
+  exit 1
+fi
+
+NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
+if [ "${NODE_MAJOR:-0}" -lt 20 ]; then
+  echo "[entrypoint] Node 版本太低：$(node -v)，需要 >= 20.9" >&2
+  exit 1
+fi
+echo "[entrypoint] Node $(node -v)"
+
+# 没构建过就先构建一次
+if [ ! -f .next/BUILD_ID ]; then
+  echo "[entrypoint] 没有构建产物，先构建（第一次会慢一点）"
+  if [ -d node_modules ]; then
+    npm run build
+  else
+    npm install --no-audit --no-fund && npm run build
   fi
-  # shellcheck source=/dev/null
-  . "$NVM_DIR/nvm.sh"
-  nvm use 22 && npm run start:production
-) || {
-  echo "WARN: nvm use 22 && npm run start:production 未成功（例如未安装 nvm、未装 Node 22 或启动报错），改用当前默认 Node 重试: npm run start:production" >&2
-  npm run start:production
-}
+fi
+
+echo "[entrypoint] 启动服务"
+exec npm run start:production
