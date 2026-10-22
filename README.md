@@ -4,12 +4,6 @@
 
 给社区图书角用的小工具 —— 不用把书抽出来，就知道该借哪本。
 
-<p align="center">
-  <img src="images/card.jpg" width="250">
-  <img src="images/detail.jpg" width="250">
-  <img src="images/shelf.jpg" width="250">
-</p>
-
 **小学组 · 社区 AI 乐园**　　在线体验：`https://<部署域名>`
 
 ---
