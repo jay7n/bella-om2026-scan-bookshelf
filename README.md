@@ -5,9 +5,9 @@
 给社区图书角用的小工具 —— 不用把书抽出来，就知道该借哪本。
 
 <p align="center">
-  <img src="docs/screenshots/card.jpg" width="250">
-  <img src="docs/screenshots/detail.jpg" width="250">
-  <img src="docs/screenshots/shelf.jpg" width="250">
+  <img src="images/card.jpg" width="250">
+  <img src="images/detail.jpg" width="250">
+  <img src="images/shelf.jpg" width="250">
 </p>
 
 **小学组 · 社区 AI 乐园**　　在线体验：`https://<部署域名>`
@@ -72,7 +72,7 @@ npm run dev
 
 手机上访问：电脑和手机连同一个 WiFi，打开 `http://<电脑主机名>.local:3000`。
 
-部署说明见 [docs/DEPLOY-sealos.md](docs/DEPLOY-sealos.md)。
+线上地址：`https://<部署域名>`
 
 ## 谁做的
 
