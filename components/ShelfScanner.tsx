@@ -6,6 +6,8 @@ import BookDetail from "./BookDetail";
 import AlbumShelf from "./AlbumShelf";
 import HistoryList from "./HistoryList";
 import ProfileSheet from "./ProfileSheet";
+import StatsPanel from "./StatsPanel";
+import { track } from "@/lib/analytics";
 import { getCachedEnrich, putCachedEnrich } from "@/lib/clientCache";
 import { getCachedCover, putCachedCover, shrinkToDataUrl } from "@/lib/coverCache";
 import {
@@ -445,6 +447,7 @@ export default function ShelfScanner() {
     async (file: File) => {
       if (busyRef.current) return;
       busyRef.current = true;
+      track("scan_start");
 
       const myId = scanSeq.current + 1;
       scanSeq.current = myId;
@@ -580,6 +583,7 @@ export default function ShelfScanner() {
 
       if (controller.signal.aborted) return;
 
+      track("scan_done", { v: found });
       if (found > 0) flushAlbum();
 
       if (failure) setError(failure);
@@ -698,6 +702,8 @@ export default function ShelfScanner() {
 
     flyingRef.current = true;
 
+    track("card_swipe", { k: slow ? "button" : "gesture", v: target });
+
     // 手指滑出去时卡片已经跟手走了一段，260ms 看着刚好；
     // 点按钮是从静止直接飞出整张卡，同样的时长会"嗖"一下太快。
     const ms = slow ? 420 : 260;
@@ -800,6 +806,7 @@ export default function ShelfScanner() {
         return;
       }
       if (current) {
+        track("open_detail", { k: "deck" });
         setDetailCard(current);
         setDetailAlbumId(null);
       }
@@ -818,6 +825,7 @@ export default function ShelfScanner() {
   };
 
   const toggleSave = useCallback((key: string) => {
+    track("save_book");
     setSaved((prev) => (prev.includes(key) ? prev : [...prev, key]));
   }, []);
 
@@ -1140,6 +1148,7 @@ export default function ShelfScanner() {
                   className={`auto-toggle ${onlyRecommended ? "on" : ""}`}
                   type="button"
                   onClick={() => {
+                    track("filter_recommend", { k: onlyRecommended ? "off" : "on" });
                     setOnlyRecommended((v) => !v);
                     setIndex(0);
                   }}
@@ -1335,11 +1344,14 @@ export default function ShelfScanner() {
         />
       )}
 
+      <StatsPanel />
+
       {profileOpen && (
         <ProfileSheet
           initial={profile ?? EMPTY_PROFILE}
           onClose={() => setProfileOpen(false)}
           onSave={(p) => {
+            track("profile_save");
             saveProfile(p);
             setProfile(p);
             setProfileOpen(false);
