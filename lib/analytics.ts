@@ -66,10 +66,72 @@ export function track(name: string, opts?: { v?: number; k?: string }): void {
   if (typeof window === "undefined") return;
   try {
     const s = load();
-    s.events.push({ n: name, t: Date.now(), s: s.session, v: opts?.v, k: opts?.k });
+    const e: StatEvent = { n: name, t: Date.now(), s: s.session, v: opts?.v, k: opts?.k };
+    s.events.push(e);
     save(s);
+    enqueue(e);
   } catch {
     /* ignore */
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 上报到服务端（可选，失败不影响本地记录）                              */
+/* ------------------------------------------------------------------ */
+
+const ENDPOINT = "/api/stat";
+const FLUSH_MS = 3000;
+
+let queue: StatEvent[] = [];
+let timer: number | null = null;
+let bound = false;
+
+function enqueue(e: StatEvent): void {
+  queue.push(e);
+  if (!bound) {
+    bound = true;
+    // 页面要关掉时尽量把剩下的发出去
+    window.addEventListener("pagehide", () => flush(true));
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flush(true);
+    });
+  }
+  if (timer === null) {
+    timer = window.setTimeout(() => flush(false), FLUSH_MS);
+  }
+}
+
+function materialize(): StatEvent[] {
+  const list = queue.slice(0, 50);
+  queue = [];
+  if (timer !== null) {
+    window.clearTimeout(timer);
+    timer = null;
+  }
+  return list;
+}
+
+function flush(useBeacon: boolean): void {
+  const list = materialize();
+  if (list.length === 0) return;
+  const payload = JSON.stringify({ events: list });
+
+  try {
+    if (useBeacon && typeof navigator !== "undefined" && "sendBeacon" in navigator) {
+      const ok = navigator.sendBeacon(
+        ENDPOINT,
+        new Blob([payload], { type: "application/json" }),
+      );
+      if (ok) return;
+    }
+    void fetch(ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    /* 发不出去就算了，本地已经留了一份 */
   }
 }
 

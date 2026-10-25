@@ -4677,3 +4677,30 @@ html[data-skin="sky"] .album-play {
   line-height: 1.5;
   color: rgba(242, 238, 225, 0.42);
 }
+
+.stats-server {
+  padding-bottom: 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.16);
+}
+
+.stats-server-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 2px 0 6px;
+  font-size: 11.5px;
+  color: rgba(242, 238, 225, 0.62);
+}
+
+.stats-server-head b {
+  color: #e9a83c;
+  font-size: 12px;
+}
+
+.stats-sec-title {
+  padding: 2px 0 4px;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: rgba(242, 238, 225, 0.4);
+}
